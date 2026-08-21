@@ -1,12 +1,13 @@
-AI Website Builder — One-Time Gemini Setup
+AI Website Builder — GitHub Pages Edition
 
-1. Upload the ZIP to Netlify.
-2. Open the live URL.
-3. First visit shows Gemini API Key setup.
-4. Paste your key and click Connect & Open Builder.
-5. The builder performs a real Gemini connection test.
-6. On success it saves the key in this browser and will not ask again on future visits.
-7. Enter a website prompt. Gemini generates/updates the site data and the live preview refreshes.
-8. Use the same chat to request edits.
+This version is designed for GitHub Pages and does NOT use Netlify Functions.
 
-Important: this is designed for your personal/internal use. The key is stored in this browser and sent to the Netlify Function. Do not share the deployed builder while a key is stored.
+Setup:
+1. Upload these files to the root of your GitHub repository.
+2. Enable GitHub Pages from Settings > Pages > Deploy from branch > main > / (root).
+3. Open the live site.
+4. Paste your Gemini API key once. It is stored only in this browser's localStorage.
+5. Enter a website prompt and press Generate.
+
+IMPORTANT:
+Because GitHub Pages is a static host, this edition calls the Gemini API directly from the browser. Your API key is therefore used client-side. For safer production use, move the Gemini call to a private server/backend later.
