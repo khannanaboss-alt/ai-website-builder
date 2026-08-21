@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Website Builder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="setup" class="setup">
+  <div class="setup-card">
+    <div class="mark">✦</div>
+    <div class="eyebrow">ONE-TIME SETUP</div>
+    <h1>Connect your AI</h1>
+    <p>Paste your Gemini API key once. We will test the connection, then open your private website builder.</p>
+    <label>Gemini API Key</label>
+    <input id="apiKey" type="password" placeholder="Paste your Gemini API key">
+    <button id="connect">Connect & Open Builder</button>
+    <div id="setupStatus"></div>
+    <small>The key is saved in this browser for your personal builder. Do not share the deployed builder while a key is saved.</small>
+  </div>
+</div>
+
+<div id="builder" class="builder hidden">
+  <header>
+    <div class="brand"><span class="brand-icon">✦</span><b>AI Website Builder</b><span class="pill">Gemini</span></div>
+    <div class="header-actions"><button id="clearKey" class="ghost">Reset API Key</button></div>
+  </header>
+
+  <main>
+    <section class="chat-panel">
+      <div class="chat-head"><div><h2>Build with AI</h2><p>Describe the website you want.</p></div><span id="statusDot" class="dot"></span></div>
+      <div id="messages" class="messages">
+        <div class="welcome"><div class="welcome-icon">✦</div><h3>What should we build?</h3><p>Try: “Build a premium landing page for a digital agency with Home, Services, About and Contact.”</p></div>
+      </div>
+      <div class="composer">
+        <textarea id="prompt" rows="3" placeholder="Describe a website or tell the AI what to change..."></textarea>
+        <div class="composer-row"><span>Press Enter to generate • Shift+Enter for a new line</span><button id="send">Generate ✦</button></div>
+      </div>
+    </section>
+
+    <section class="preview-panel">
+      <div class="preview-head"><div><b>Live Preview</b><span id="previewState">Ready</span></div><button id="openPreview" class="ghost">Open Preview</button></div>
+      <iframe id="preview" title="Website preview"></iframe>
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
