@@ -1,8 +1,45 @@
 const $ = id => document.getElementById(id);
 let currentSite = null;
 
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+let geminiModel = localStorage.getItem("ai_builder_gemini_model") || null;
+
+async function discoverGeminiModel(key) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`;
+  const response = await fetch(url);
+  const raw = await response.text();
+  let data = {};
+  try { data = raw ? JSON.parse(raw) : {}; } catch (_) {
+    throw new Error("Gemini returned an invalid model-list response.");
+  }
+  if (!response.ok) throw new Error(data?.error?.message || `Gemini model discovery failed (HTTP ${response.status})`);
+
+  const models = Array.isArray(data.models) ? data.models : [];
+  const supported = models.filter(m =>
+    Array.isArray(m.supportedGenerationMethods) &&
+    m.supportedGenerationMethods.includes("generateContent")
+  );
+  if (!supported.length) throw new Error("This Gemini API key has no available generateContent model.");
+
+  // Prefer Flash models automatically. If the preferred model is unavailable,
+  // fall back to the first Flash model available to this API key.
+  const preferred = [
+    "gemini-3.6-flash",
+    "gemini-3.1-flash",
+    "gemini-3-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
+  ];
+  const byName = new Map(supported.map(m => [m.name?.replace(/^models\//, ""), m]));
+  let chosen = preferred.map(n => byName.get(n)).find(Boolean);
+  if (!chosen) chosen = supported.find(m => /flash/i.test(m.name || ""));
+  if (!chosen) chosen = supported[0];
+
+  geminiModel = (chosen.name || "").replace(/^models\//, "");
+  if (!geminiModel) throw new Error("Gemini returned a model without a name.");
+  localStorage.setItem("ai_builder_gemini_model", geminiModel);
+  return geminiModel;
+}
 
 function addMsg(role, text) {
   const box = $("messages");
@@ -47,9 +84,10 @@ function parseSite(text) {
 }
 
 async function callGemini(key, prompt, current) {
+  const model = await discoverGeminiModel(key);
   const system = `You are the AI engine inside a website builder. Return ONLY valid JSON, no markdown and no explanation. The JSON must have exactly these useful fields when possible: brand (string), headline (string), subheadline (string), cta (string), nav (array of strings), sectionTitle (string), cards (array of objects with title and text strings). Create or update a professional website based on the user's request. If current website data is supplied, modify it according to the request instead of starting over. Keep all values concise and suitable for a real website.`;
   const user = `Request: ${prompt}\n\nCurrent website JSON: ${JSON.stringify(current || {})}`;
-  const response = await fetch(GEMINI_URL + `?key=${encodeURIComponent(key)}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -104,7 +142,7 @@ $("connect").onclick = async () => {
   const st = $("setupStatus");
   if (!key) { st.textContent = "Paste your Gemini API key first."; st.className = "err"; return; }
   $("connect").disabled = true;
-  st.textContent = "Connecting to Gemini…";
+  st.textContent = "Checking your key and finding an available Gemini model…";
   st.className = "";
   try {
     await callGemini(key, "Return a simple default website object for a digital agency.", null);
